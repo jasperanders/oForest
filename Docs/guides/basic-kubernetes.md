@@ -106,7 +106,6 @@ Your Kubernetes cluster is now ready to be used. You can access the `kubectl` co
 
 1. The dashboard should look something like this:
 
-   ![[Pasted image 20220109131325.png]]
 
    In the picture we see a microbot, a dummy application, is deployed. To also deploy this and to make sure your dashboard is working run:
 
@@ -279,7 +278,6 @@ kubectl get ingress
 
 We now find our microbot service exposed to the internet at the provided domain. Congratulations!
 
-![[Pasted image 20220109155424.png]]
 
 ## Limit Resource Usage
 
