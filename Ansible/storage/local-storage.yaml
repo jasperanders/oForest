@@ -1,0 +1,82 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: local-storage
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: database-pv
+spec:
+  capacity:
+    storage: 20Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /root/cluster_storage/
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - oforrest
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  # any PVC name
+  name: database-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  # specify microk8s-hostpath
+  storageClassName: local-storage
+  resources:
+    requests:
+      # storage size to use
+      storage: 20Gi
+# ---
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: backup-pv
+# spec:
+#   capacity:
+#     storage: 5Gi
+#   volumeMode: Filesystem
+#   accessModes:
+#   - ReadWriteOnce
+#   persistentVolumeReclaimPolicy: Retain
+#   storageClassName: local-storage
+#   local:
+#     path: /cluster_
+#   nodeAffinity:
+#     required:
+#       nodeSelectorTerms:
+#       - matchExpressions:
+#         - key: kubernetes.io/hostname
+#           operator: In
+#           values:
+#           - oforest
+# ---
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#  # any PVC name
+#   name: backup-pvc
+# spec:
+#  accessModes:
+#    - ReadWriteOnce
+#  # specify microk8s-hostpath
+#  storageClassName: local-storage
+#  resources:
+#    requests:
+#      # storage size to use
+#      storage: 50Mi

@@ -1,0 +1,7 @@
+.idea
+.vscode
+db.sqlite3
+__pycache__
+Dockerfile
+.gitlab-ci.yml
+zz_kustomize/*

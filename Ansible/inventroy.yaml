@@ -1,0 +1,8 @@
+cluster:
+  hosts:
+    vm01:
+      ansible_host: 2a00:1398:4:5807::810d:6f6b 
+      ansible_user: root 
+      # ansible_host: bw.cloud
+      # ansible_user: ubuntu 
+

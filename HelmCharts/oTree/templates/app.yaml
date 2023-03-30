@@ -1,0 +1,105 @@
+# author: Jasper Anders
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{.Values.name}}-otree
+  labels:
+    app: {{.Values.name}}-otree
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: {{.Values.name}}-otree
+  # this is the blueprint for the App to deploy
+  template:
+    metadata:
+      labels:
+        app: {{.Values.name}}-otree
+    spec:
+      containers:
+        - name: otree
+          image: {{.Values.image}} 
+          # pull img only from local registry
+          imagePullPolicy: Always
+          # set env variables
+          env:
+            # Run oTree on postgres database
+            - name: OTREE_IN_MEMORY
+              value: ""
+            # URL of the database
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.name}}-secrets
+                  key: DATABASE_URL
+            # set otree admin password
+            - name: OTREE_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.name}}-secrets
+                  key: ADMIN_PW
+            # run otree in production mode
+            - name: OTREE_PRODUCTION
+              value: {{.Values.OTREE_PRODUCTION | default "1" | quote }}
+            # set auth level to STUDY / DEMO 
+            - name: OTREE_AUTH_LEVEL
+              value: {{.Values.OTREE_AUTH_LEVEL | default "STUDY" | quote}} 
+            # - name: OTREE_SKIP_CSRF
+            #   value: "TRUE"
+          # expose port where oTree is running
+          ports:
+            - containerPort: 8000
+      # enable pulling from remote gitlab repo
+      imagePullSecrets:
+        - name: regcred
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{.Values.name}}-otree-service
+spec:
+  selector:
+    app: {{.Values.name}}-otree
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort:
+        8000
+        # nodePort: 30000 # watch there are four 0s -> so 30.000 not 3000 # this only needed for type load balancer
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{.Values.name}}-otree-ingr
+  annotations:
+    cert-manager.io/cluster-issuer: "lets-encrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/server-snippets: |
+      location / {
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_http_version 1.1;
+        proxy_set_header X-Forwarded-Host $http_host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header Host $host;
+        proxy_set_header Connection "upgrade";
+        proxy_cache_bypass $http_upgrade;
+        }
+spec:
+  ingressClassName: public
+  tls:
+    - hosts:
+        - {{.Values.name}}.{{.Values.baseDomain}} 
+      secretName: {{.Values.name}}-tls
+  rules:
+    - host: {{.Values.name}}.{{.Values.baseDomain}} 
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{.Values.name}}-otree-service
+                port:
+                  number: 80

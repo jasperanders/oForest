@@ -1,0 +1,19 @@
+---
+- name: Copy config yamls to remote server
+  gather_facts: false
+  hosts: cluster
+  tasks:
+    - name: Copy gitLab runner yaml to remote server
+      copy:
+        src: ./gitLab-runner
+        dest: ~/
+
+    - name: Apply runner secret
+      command: microk8s kubectl apply -f ~/gitLab-runner/gitLab-runner-secret.yaml
+
+    - name: Add helm repo for gitlab runners
+      ansible.builtin.shell: microk8s helm3 repo add gitlab https://charts.gitlab.io
+      register: repo
+
+    - name: Install gitLab runner
+      command: microk8s helm3 install --namespace default gitlab-runner -f ~/gitLab-runner/gitLab-runner-config.yaml gitlab/gitlab-runner

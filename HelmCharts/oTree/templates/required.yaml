@@ -1,0 +1,5 @@
+{{- $_ := required "baseDomain is a required value" .Values.baseDomain}}
+{{- $_ := required "name is a required value" .Values.name}}
+{{- $_ := required "image is a required value" .Values.image}}
+{{- $_ := required "ENV_OTREE_PRODUCTION is a required value" .Values.ENV_OTREE_PRODUCTION}}
+{{- $_ := required "dbPw is a required value" .Values.dbPw}}

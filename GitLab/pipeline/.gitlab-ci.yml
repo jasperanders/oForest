@@ -1,0 +1,113 @@
+# author: Jasper Anders
+variables:
+  HELM_REG: "https://gitlab.com/api/v4/projects/[Helm Project ID here]/packages/helm/stable"
+  BASE_DOMAIN: "your.domain.here"
+
+stages:
+  - build
+  # if you want a test stage add it here
+  - acceptance
+  - release
+  - deploy
+  - manage
+  - danger
+
+build:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.1-debug
+    entrypoint: [""]
+  # when: manual
+  script:
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --snapshot-mode "time"
+      --single-snapshot
+      --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}"
+
+acceptance:
+  stage: acceptance
+  image:
+    name: ${CI_REGISTRY_IMAGE}:latest
+    entrypoint: [""]
+  needs: ["build"]
+  script:
+    - cd src 
+    - otree devserver 8000 >> otree.log 2>&1 & 
+    # Wait for the devsever to spin up
+    - sleep 5
+    - curl -s -L 0.0.0.0:8000/api/otree_version/ | grep -q "version" && echo "Acceptance test passed" || exit 1 
+  after_script:
+    - cd src
+    - echo "oTree logs were:"
+    - cat otree.log
+
+Deploy oTree 1/2:
+  image:
+    name: alpine/helm:3.10.2
+    entrypoint: [""]
+  stage: deploy
+  needs: 
+    - build
+    - acceptance
+  # when: manual
+  before_script:
+    - helm repo add --username $CI_REGISTRY_USER --password $CI_REGISTRY_PASSWORD oForest $HELM_REG
+  script:
+    - helm upgrade -i --set name=$CI_PROJECT_NAME --set dbPw=${MASTER_PWD} --set baseDomain=$BASE_DOMAIN --set ENV_OTREE_PRODUCTION=$OTREE_PRODUCTION --set image="${CI_REGISTRY_IMAGE}:latest" $CI_PROJECT_NAME oForest/oTree
+
+Deploy oTree 2/2:
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: [""]
+  stage: deploy
+  needs: 
+    - Deploy oTree 1/2
+  script: kubectl rollout restart deployment/${CI_PROJECT_NAME}-otree
+
+Get oTree Logs:
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: [""]
+  stage: manage
+  # needs: ["build", "release"]
+  # Optional: Manual gate
+  when: manual
+  script:
+    # exec into otree pod and run resetdb command from script
+    - kubectl logs deployments/${CI_PROJECT_NAME}-otree
+
+Describe Kubernetes Resource:
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: [""]
+  stage: manage
+  # needs: ["build", "release"]
+  # Optional: Manual gate
+  when: manual
+  script:
+    # exec into otree pod and run resetdb command from script
+    - kubectl describe deployments/${CI_PROJECT_NAME}-otree
+
+RESET-DB-OTREE:
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: [""]
+  stage: danger
+  # needs: ["build", "release"]
+  # Optional: Manual gate
+  when: manual
+  script:
+    # exec into otree pod and run resetdb command from script
+    - kubectl exec deploy/$CI_PROJECT_NAME-otree -- bash .resetdb.sh
+
+DELETE-DEPLOYMENT:
+  image:
+    name: alpine/helm:3.10.2
+    entrypoint: [""]
+  stage: danger
+  # Optional: Manual gate
+  when: manual
+  script:
+    - helm uninstall $CI_PROJECT_NAME

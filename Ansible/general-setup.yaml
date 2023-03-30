@@ -1,0 +1,127 @@
+---
+- name: Basic Setup 
+  hosts: cluster
+  gather_facts: false
+  become: true
+  tasks:
+    # - name: Print debug
+    #   ansible.builtin.debug:
+    #     var: ansible_user
+    # - name: Install docker
+    #   apt:
+    #     name: docker.io
+    #     update_cache: true
+    #     cache_valid_time: 86400
+    #     state: present
+    - name: Install microk8s
+      community.general.snap:
+        name: microk8s
+        state: present
+        classic: true
+
+    - name: Add user to Docker and Microk8s groups, they will need to logout and in again
+      user:
+        name: "{{ ansible_user }}"
+        state: present
+        groups:
+          # - docker
+          - microk8s
+        append: true
+    - name: Add alias to kubectl
+      become: false
+      lineinfile:
+        path: "~/.bashrc"
+        regexp: "^alias kubectl="
+        line: 'alias kubectl="microk8s kubectl"'
+        state: present
+    - name: Add bash completion for kubectl
+      become: false
+      lineinfile:
+        path: "~/.bashrc"
+        regexp: '^source \<\(kubectl'
+        line: "source <(kubectl completion bash)"
+        state: present
+        
+    - name: Install btop for local monitoring
+      community.general.snap:
+        name: btop
+        state: present
+
+    - name: Open ssh
+      community.general.ufw:
+        rule: allow
+        port: ssh
+    - name: Open http
+      community.general.ufw:
+        rule: allow
+        port: http
+    - name: Open https
+      community.general.ufw:
+        rule: allow
+        port: https
+    - name: Enable ufw
+      register: ufw
+      community.general.ufw:
+        state: enabled
+
+    - name: Reboot to enable ufw
+      ansible.builtin.reboot:
+      when: ufw.changed
+
+- name: Configure Microk8s
+  hosts: cluster
+  become: false
+  tasks:
+    - name: Enable microk8s addons
+      ansible.builtin.shell: microk8s enable observability dns dashboard helm3 ingress cert-manager hostpath-storage
+      register: enable
+
+ 
+    # - name: Add cert-manager repo
+    #   command: microk8s helm3 repo add jetstack https://charts.jetstack.io
+    - name: Update helm repo
+      ansible.builtin.shell: microk8s helm3 repo update
+      register: update
+
+    - name: Generate Dashboard Token
+      register: dashboard_token
+      ansible.builtin.shell: |
+        token=$(microk8s kubectl -n kube-system get secret | grep default-token | cut -d " " -f1)
+
+        microk8s kubectl -n kube-system describe secret $token | grep -o "token:.*" | awk '{print $2}'
+
+    - name: Print Dashboard Token
+      ansible.builtin.debug:
+        msg: "{{dashboard_token.stdout}}"
+
+- name: Add ClusterResources
+  hosts: cluster
+  become: false
+  tasks:
+    - name: Add Manifest for ClusterIssuer (Staging/Production) for SLL encryption
+      copy:
+        src: ./cert-manager
+        dest: ~/
+    - name: Apply ClusterIssuer manifest
+      command: microk8s kubectl apply -f ~/cert-manager
+
+    - name: Add storage resources
+      copy:
+        src: ./storage
+        dest: ~/
+    - name: Apply storage resource manifest
+      command: microk8s kubectl apply -f ~/storage
+
+    - name: Copy Grafana Dashboard Ingress
+      copy:
+        src: ./observability
+        dest: ~/
+    - name: Apply Grafana Dashboard Ingress manifest
+      command: microk8s kubectl apply -f ~/observability
+
+    - name: Copy Resource Constraints 
+      copy:
+        src: ./resource-constraints
+        dest: ~/
+    - name: Apply Constraints manifest 
+      command: microk8s kubectl apply -f ~/resource-constraints

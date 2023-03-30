@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: default-constraints
+  namespace: default
+spec:
+  limits:
+  - default: # this section defines default limits
+      cpu: "100m"
+      memory: "500mi"
+    defaultRequest: # this section defines default requests
+      cpu: "100m"
+      memory: "500mi"
+    max: # max and min define the limit range
+      cpu: "200m"
+      memory: "500mi"
+    min:
+      cpu: "100m"
+    type: Container
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: mem-cpu-constraints
+  namespace: default
+spec:
+  hard:
+    requests.cpu: "1"
+    requests.memory: 4Gi
+    limits.cpu: "1.6"
+    limits.memory: 5Gi

@@ -1,0 +1,72 @@
+# ---
+# apiVersion: batch/v1
+# kind: CronJob
+# metadata: 
+#   name: {{.Values.name}}-backup
+# spec:
+#   schedule: "0 0 * * 0"
+#   jobTemplate:
+#     spec:
+#       template:
+#         spec:
+#           containers:
+#           - name: backup
+#             image: postgres:latest
+#             imagePullPolicy: IfNotPresent
+#             command: ["pg_dump"]
+#             args: 
+#               - --host 
+#               - {{.Values.name}} 
+#               - -postgres-sevice 
+#               - -U 
+#               - postgres 
+#               - -f 
+#               - /home/{{.Values.name}}_$(date +\"%F\").sql"  
+#             volumeMounts:
+#               - mountPath: /home
+#                 name: {{.Values.name}}-backup-volumes
+#           volumes:
+#             - name: {{.Values.name}}-backup-volumes
+#               persistentVolumeClaim:
+#         # specify PVC name you defined
+#                 claimName: {{.Values.name}}-backup-pvc
+#           restartPolicy: OnFailure
+# ---
+apiVersion: batch/v1
+kind: Job
+metadata: 
+  name: {{.Values.name}}-backup 
+spec:
+  ttlSecondsAfterFinished: 40 
+  template:
+    spec:
+      containers:
+      - name: backup
+        image: postgres:15.1
+        imagePullPolicy: IfNotPresent
+        command: ["echo", '/home/dump_$(DATE).sql']
+        # args: 
+        #   - pg_dump
+        #   - --host 
+        #   # - opine-postgres-service
+        #   - {{.Values.name | lower}}-postgres-service 
+        #   - -U 
+        #   - postgres 
+        #   - -f 
+          # - /home/dump_$DATE.sql
+
+        # args: ["--host", "{{.Values.name}}-postgres-service", "-U", "postgres", "-d","django_db", "-f",'home/{{.Values.name}}_$(date +"%F").sql' ] 
+        env:
+          - name: PGPASSWORD
+            value: "password"
+          - name: DATE 
+            value: "$(date)"
+        volumeMounts:
+          - mountPath: /home
+            name: {{.Values.name}}-backup-volumes 
+      volumes:
+        - name: {{.Values.name}}-backup-volumes 
+          persistentVolumeClaim:
+    # specify PVC name you defined
+            claimName: backup-pvc 
+      restartPolicy: Never

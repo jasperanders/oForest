@@ -1,0 +1,54 @@
+# author: Jasper Anders
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{.Values.name}}-postgres-deployment
+  labels:
+    app: {{.Values.name}}-postgresdb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{.Values.name}}-postgresdb
+  template:
+    metadata:
+      labels:
+        app: {{.Values.name}}-postgresdb
+    spec:
+      containers:
+        - name: postgresdb
+          image: postgres
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.name}}-secrets
+                  key: DATABASE_PW
+            - name: POSTGRES_DB
+              value: "django_db"
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: {{.Values.name}}-db-volumes
+              subPath: {{.Values.name}} 
+
+      volumes:
+        - name: {{.Values.name}}-db-volumes
+          persistentVolumeClaim:
+        # specify PVC name you defined
+            claimName: database-pvc 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{.Values.name}}-postgres-service
+spec:
+  selector:
+    app: {{.Values.name}}-postgresdb
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432 # port of the pod
+
