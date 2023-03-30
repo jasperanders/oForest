@@ -16,24 +16,24 @@ As a first step, clone the oForest repository. The repository has the following 
 ```
 oForest
 |-  Ansible
-		|-📁 cert-manager
-		|-📁 gitLab-runner
-		|-📁 observability
-		|-📁 storage
-		|- general-setup.yaml
-		|- gitLab.yaml 
-		|- inventory.yaml
-		|- README.md
+	|-📁 cert-manager
+	|-📁 gitLab-runner
+	|-📁 observability
+	|-📁 storage
+	|- general-setup.yaml
+	|- gitLab.yaml 
+	|- inventory.yaml
+	|- README.md
 	 
 |-  GitLab
-		|-📁 template-experiment
-		|-📁 pipeline
+	|-📁 template-experiment
+	|-📁 pipeline
 	 
 |-  HelmChart
-		|-📁 oTreeChart
-			|-📁 templates
-			|- chart.yaml
-			|- values.yaml
+	|-📁 oTreeChart
+		|-📁 templates
+		|- chart.yaml
+		|- values.yaml
 ```
 
 The Ansible folder contains all the Playbooks and configuration files that are needed to create the oForest environment on the server. The GitLab folder contains two repositories that need to be uploaded to their own project as soon as an administrator has created a GitLab group. Last, the HelmChart folder contains all the Manifest templates, that are needed in deploying a new oTree experiment. 
