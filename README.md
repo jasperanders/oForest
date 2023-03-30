@@ -152,5 +152,5 @@ ansible-playbook -i inventroy.yaml gitLab.yaml
 
 This concludes the setup of the oTree environment. You can now invite researchers to the GitLab group. By forking the `template-experiment`, they can deploy their own experiments. For further instructions consult the `README.md` in the template repository.
 
-If you want to understand the components of oForest, you can also find my thesis [here](./Docs/Thesis/Jasper_Anders_Building_oForest.pdf).
+If you want to understand the components of oForest, you can also find my thesis [here]("./Docs/Thesis/Cultivating an oForest—Operating a Scalable Experimentation Infrastructure for oTree.pdf").
 
