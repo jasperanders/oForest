@@ -57,6 +57,19 @@ After you are done, you can invoke the `general-setup.yaml` Playbook. **Before y
 ansible-playbook -i inventroy.yaml general-setup.yaml
 ```
 
+This script will also enable the [Kubernetes Dashboard](https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/). To access the dashboard create an ssh tunnel by running: 
+
+```bash
+ssh -L localhost:8001:127.0.0.1:8001 [user]@[cluster]
+# And on the cluster run
+kubectl proxy
+``` 
+
+You can access the dashboard [here](http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/#/workloads?namespace=default).
+
+If you want to toy around with Kubernetes a bit, you can use [this guide](./Docs/guides/basic-kubernetes.md).
+
+
 ## Preparing GitLab
 
 Installing all dependencies should only take a few moments, meanwhile, you can start setting up GitLab and the runners. oForest uses GitLab as its main user interface.
