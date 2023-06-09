@@ -22,10 +22,10 @@ spec:
   ingressClassName: public
   tls:
     - hosts:
-        - observability.kd2experiment.iism.kit.edu
+        - observability.your_host
       secretName: grafana-tls
   rules:
-    - host: observability.kd2experiment.iism.kit.edu
+    - host: observability.your_host
       http:
         paths:
           - path: /

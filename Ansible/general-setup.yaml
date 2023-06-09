@@ -4,15 +4,6 @@
   gather_facts: false
   become: true
   tasks:
-    # - name: Print debug
-    #   ansible.builtin.debug:
-    #     var: ansible_user
-    # - name: Install docker
-    #   apt:
-    #     name: docker.io
-    #     update_cache: true
-    #     cache_valid_time: 86400
-    #     state: present
     - name: Install microk8s
       community.general.snap:
         name: microk8s
@@ -75,10 +66,6 @@
     - name: Enable microk8s addons
       ansible.builtin.shell: microk8s enable observability dns dashboard helm3 ingress cert-manager hostpath-storage
       register: enable
-
- 
-    # - name: Add cert-manager repo
-    #   command: microk8s helm3 repo add jetstack https://charts.jetstack.io
     - name: Update helm repo
       ansible.builtin.shell: microk8s helm3 repo update
       register: update
@@ -87,9 +74,7 @@
       register: dashboard_token
       ansible.builtin.shell: |
         token=$(microk8s kubectl -n kube-system get secret | grep default-token | cut -d " " -f1)
-
         microk8s kubectl -n kube-system describe secret $token | grep -o "token:.*" | awk '{print $2}'
-
     - name: Print Dashboard Token
       ansible.builtin.debug:
         msg: "{{dashboard_token.stdout}}"

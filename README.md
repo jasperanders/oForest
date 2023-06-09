@@ -7,6 +7,7 @@ This is the companion repository for the thesis that introduced oForest, a tool 
 This is the quick setup guide to creating the oForest deployment environment. To get started, make sure you match the following **requirements**.
 
 - [ ] `ssh` access to an Ubuntu 22.04 server with a static IP address. Make sure no firewall blocks in- or outbound traffic to your server. Especially make sure the ports 80 (HTTP), 443 (HTTPS) and 22 (SSH) are not blocked.
+- [ ] A domain that points to your IP address. And that has a wildcard DNS resolution, i.e. all traffic from `*.your_domain.com` will be routed to your IP.
 - [ ] An account and empty project group on [GitLab](https://gitlab.com).
 - [ ] Have [Ansible](https://ansible.com/) installed on your local computer, you can find an installation guide [here](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html). 
 - [ ] Be familiar with Git
@@ -40,7 +41,7 @@ The Ansible folder contains all the Playbooks and configuration files that are n
 
 ## General Setup using Ansible
 
-After you downloaded these files, open your terminal and navigate to the Ansible folder. Before running our first Playbook, we first need to add our server IP address and `ssh` user to the `inventory.yaml`. It should look similar to this.
+After you downloaded these files, open your terminal and navigate to the Ansible folder. Before running our first Playbook, we first need to add our server IP address and `ssh` user to the `inventory.yaml`. It should look similar to this. You also need to replace every instance of `your_domain.com` with your actual domain.
 
 ```yaml
 # inventory.yaml
@@ -51,7 +52,11 @@ cluster:
       ansible_user: root # put your ssh user here 
 ```
 
-After you are done, you can invoke the `general-setup.yaml` Playbook. **Before you continue, we encourage you to look at the file to understand what you are about to do.** An Ansible playbook is relatively self-explanatory. After that, you can start by running:
+After you are done, you can invoke the `general-setup.yaml` Playbook. 
+
+> **Before you continue, we encourage you to look at the file to understand what you are about to do.** 
+
+An Ansible playbook is relatively self-explanatory. After that, you can start by running:
 
 ```bash
 ansible-playbook -i inventroy.yaml general-setup.yaml
