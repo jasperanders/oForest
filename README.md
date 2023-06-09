@@ -41,7 +41,7 @@ The Ansible folder contains all the Playbooks and configuration files that are n
 
 ## General Setup using Ansible
 
-After you downloaded these files, open your terminal and navigate to the Ansible folder. Before running our first Playbook, we first need to add our server IP address and `ssh` user to the `inventory.yaml`. It should look similar to this. You also need to replace every instance of `your_domain.com` with your actual domain.
+After you downloaded these files, open your terminal and navigate to the Ansible folder. Before running our first Playbook, we first need to add our server IP address and `ssh` user to the `inventory.yaml`. It should look similar to this. You also need to replace every instance of `your_domain.com` with your actual domain. For this, I recommend doing a global search on the whole repo using an editor of your choice.
 
 ```yaml
 # inventory.yaml
