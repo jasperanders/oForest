@@ -90,7 +90,10 @@ You will do:
 Go to the GitLab group, you created earlier, and use the left side menu to navigate to `CI/CD > Runners`. Click the blue "Register a group runner" button and copy the token. Store the token somewhere save, e.g. a password manager like [1Password](https://1password.com/de/) or [KeePass](https://keepass.info/). The token you just generated will be referred to as `runner-registration-token`.
 
 ### Access Tokens
-Afterward, navigate to `Settings > Repository` and expand the *Deploy Token* section. Here, create three new tokens. **Attention! You will only be able to see the tokens once. Make sure to save them properly.**:
+
+> Attention: This section previously used project level tokens. As of now, this is a feature only available for paying customers of GitLab. We thus have to rely on user level tokens.
+
+Afterward, navigate to your user profile and select `Preferences > Access Tokens`. Here, create three new personal access tokens. **Attention! You will only be able to see the tokens once. Make sure to save them properly.**:
 
 1. Call it `K8s read registry`, and the username `k8s-read-registry`. (You can also choose your own name here). Then tick the scope box that says `read_registry`.
 2. Call it `Helm admin`, and the username `helm-admin`. Tick the boxes for `read_package_registry` and `write_package_registry`.
@@ -102,7 +105,7 @@ Afterward, navigate to `Settings > Repository` and expand the *Deploy Token* sec
 
 oForest uses Helm to manage Kubernetes Packages. You can build your own Helm package and use it in your infrastructure. Besides a Container registry, GitLab also allows you to store helm charts. 
 
-For this, you need to create a project in your oForest group that will hold your charts. After the creation, you need to copy the project ID right below the project name.
+For this, you need to create a project in your oForest group that will hold your charts. After the creation, you need to copy the project ID right below the project name. Make sure the project and its registry are public, otherwise your applications won't be able to access the helm charts.
 
 Now use your terminal to navigate to the Helm Charts folder. You will find a file called `oTree-[version].tgz` in there, this is a packaged Helm chart. We can use `curl` to push the packaged helm chart to the registry. If you deleted the packaged `.tgz` file or made changes to the Helm Chart to personalize it, you can rebuild it like so: 
 
